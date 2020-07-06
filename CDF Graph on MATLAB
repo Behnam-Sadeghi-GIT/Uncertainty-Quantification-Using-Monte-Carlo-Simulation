@@ -1,0 +1,125 @@
+function graph_cdf_new(f_name,g_cdf,num_run,num_cdf)
+close all;
+d={};
+v=[];
+v1= zeros(num_run,1);
+v11 = zeros(num_run,1);
+mu_std = [];
+si = size(g_cdf);
+t = 0;
+avpppc=[0,0,0,0,0,0];
+dd{1,1}='Title_Ave.'
+dd{2,1} = 'Avg.';
+dd{3,1} = 'Variance';
+dd{4,1} = 'P10';
+dd{5,1} = 'Return';
+dd{6,1} ='P90';
+dd{7,1} = 'Uncertainty';
+for i = 1:si(2)
+ t = t + 1;
+ mu_std = g_cdf{i}{1,1};
+ v = g_cdf{i}{2,1};
+ %v1 = v + v1;
+ v11 = sort(v);
+ y1 = cdf('Normal',v11,mu_std(1,1),mu_std(2,1));
+ h = figure;
+ plot(v11,y1,'-');
+ hold on;
+ for k = 1:num_run
+ d{k,t} = v(k,1);
+ end
+ t = t + 1;
+ d{1,t} = 'Avg.';
+ d{2,t} = 'Variance';
+ d{3,t} = 'P10';
+ d{4,t} = 'Return';
+ d{5,t} ='P90';
+ d{6,t} = 'Uncertainty';
+ t = t + 1;
+ d{1,t}= mean(v); % Avg
+ d{2,t}= var(v); % Variance
+ d{3,t}= prctile_one(v,0.1); %prctile(sum1,0.1); P10
+ d{4,t}= prctile_one(v,0.5); %prctile(sum1,0.5); Return
+ d{5,t}= prctile_one(v,0.9); %prctile(sum1,0.9); P90 
+ if abs(d{5,t}-d{3,t})> 0.000001
+ d{6,t} = 1 / (d{5,t}- d{3,t}); %Risk
+ else
+ d{6,t} = 'Er.(num/0)'; %Risk
+ end
+ average = 1;
+ avpppc = [d{1,t},d{2,t},d{3,t},d{4,t},d{5,t},d{6,t}]+ avpppc;
+ 
+ v=[];
+ y1=[];
+ v11 = [];
+ %t = t +1 ;
+ for j = 1:num_cdf 
+ t = t + 1;
+ for l = 1:num_run
+ d{l,t} = norminv(rand(),mu_std(1,1),mu_std(2,1));
+ v(l,1) = d{l,t};
+ end
+ t = t + 1;
+ d{1,t} = 'Avg.';
+ d{2,t} = 'Variance';
+ d{3,t} = 'P10';
+ d{4,t} = 'Return';
+ d{5,t} ='P90';
+ d{6,t} = 'Uncertainty';
+ t = t + 1;
+ d{1,t}= mean(v); % Avg
+ d{2,t}= var(v); % Variance
+ d{3,t}= prctile_one(v,0.1); %prctile(sum1,0.1); P10
+ d{4,t}= prctile_one(v,0.5); %prctile(sum1,0.5); Return
+ d{5,t}= prctile_one(v,0.9); %prctile(sum1,0.9); P90
+ if abs(d{5,t}-d{3,t})> 0.000001
+ d{6,t} = 1 / (d{5,t}- d{3,t}); %Risk
+ else 
+ d{6,t} = 'Er.(num/0)'; %Risk
+ end
+ %v1 = v1 +v;
+ average = average + 1;
+ avpppc = [d{1,t},d{2,t},d{3,t},d{4,t},d{5,t},d{6,t}]+ avpppc;
+ v11 = sort(v(:,1))
+ y1 = cdf('Normal',v11,mu_std(1,1),mu_std(2,1));
+ plot(v11,y1,'-');
+ hold on;
+ v=[];
+ y1=[];
+ v11 = [];
+ % t = t + 1;
+ 
+ end
+ 
+ y = join(['A',int2str(i)]);
+ xlswrite(f_name,d,y);
+ avpppc = avpppc / average;
+ y = join(['A',int2str(i),'__',int2str(average)]);
+ dd{1,i+1} = y;
+ dd{2,i+1} = avpppc(1);
+ dd{3,i+1} = avpppc(2);
+ dd{4,i+1} = avpppc(3);
+ dd{5,i+1} = avpppc(4);
+ dd{6,i+1} = avpppc(5);
+ dd{7,i+1} = avpppc(6);
+ %p_final = plot(v11,y1,'k-');
+ %legend([p_final],{'Mean of CDFs'},'Location','southeast');
+ xlabel('Required Class\Parameter') 
+ ylabel('Probability')
+ %legend%('Mean of CDFs','Location','northwest')
+ save_graph(i,h)
+ hold off;
+ close all;
+ avpppc=[0,0,0,0,0,0];
+ d={};
+ v=[];
+ y1=[];
+ mu_std = [];
+ v1=zeros(num_run,1);
+ v11 = zeros(num_run,1);
+ hold off;
+ close all;
+ t = 0;
+end
+xlswrite(f_name,dd,'Ave.');
+end
