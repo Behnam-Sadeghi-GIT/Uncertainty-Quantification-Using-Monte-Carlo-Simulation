@@ -1,0 +1,14 @@
+function V_x = prctile_one(V,p)
+% The linear interpolation between closest ranks method in the case of `C=1`
+% [Percentile - Wikipedia](https://en.wikipedia.org/wiki/Percentile)
+if ~isvector(p) || numel(p) == 0 || any(p < 0 | p > 1) || ~isreal(p)
+ error('Make sure the Second digit within the [0,1] interval');
+end
+V = sort(V,'ascend'); 
+N = length(V);
+x = p*(N-1)+1; % position x
+if floor(x) < N
+ V_x = V(floor(x)) + mod(x,1)*(V(floor(x)+1) - V(floor(x))); % value
+else
+ V_x = V(N); % position N
+end
